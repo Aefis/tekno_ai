@@ -11,8 +11,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import re
 
-INPUT_FILE = "list_of_items_cleaned_focussed.csv"
-OUTPUT_FILE = "last_version.csv"
+INPUT_FILE = "b_cleaned_list.csv"
+OUTPUT_FILE = "b_hashed_list.csv"
 BACKUP_FILE = "backup.csv"
 TEXT_DIR = "texts"
 os.makedirs(TEXT_DIR, exist_ok=True)
