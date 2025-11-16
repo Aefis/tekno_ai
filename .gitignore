@@ -1,2 +1,3 @@
 rag/index_storage/
 rag/texts/
+.env
