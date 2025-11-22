@@ -1,3 +1,28 @@
+# Environment variables
+.env
+
+# Python virtual environment
+.venv/
+env/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Editors
+.vscode/
+.idea/
+
+# Chainlit
+.chainlit/
+chainlit/.chainlit
+chainlit.log
+
+# RAG indices & text data
 rag/index_storage/
 rag/texts/
-.env
+
+# The markdown that created after running chainlit project
+chainlit/chainlit.md
