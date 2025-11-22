@@ -17,8 +17,7 @@ __pycache__/
 
 # Chainlit
 .chainlit/
-chainlit/.chainlit
-chainlit.log
+chainlit/.*
 
 # RAG indices & text data
 rag/index_storage/
@@ -26,3 +25,6 @@ rag/texts/
 
 # The markdown that created after running chainlit project
 chainlit/chainlit.md
+
+# node modules and all other files inside the folder
+node_modules/

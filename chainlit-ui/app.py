@@ -19,7 +19,7 @@ cursor = conn.cursor()
 def auth_callback(username, password):
     # Fetch user from database
     cursor.execute(
-    'SELECT "identifier", "passwordHash", "metadata" FROM "User" WHERE "identifier" = %s',
+    'SELECT "identifier", "password", "metadata" FROM "User" WHERE "identifier" = %s',
     (username,)
     )
     row = cursor.fetchone()
