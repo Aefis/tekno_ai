@@ -28,3 +28,9 @@ chainlit/chainlit.md
 
 # node modules and all other files inside the folder
 node_modules/
+
+
+rag/temp/
+rag/raw_html/
+rag/xml_dir/
+rag/xml_dir/
