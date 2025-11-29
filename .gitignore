@@ -34,3 +34,7 @@ rag/temp/
 rag/raw_html/
 rag/xml_dir/
 rag/xml_dir/
+
+
+rag/index_storage_bbai
+rag/qdrant_local_bbai
