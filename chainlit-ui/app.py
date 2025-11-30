@@ -23,7 +23,7 @@ load_dotenv()
 # Load env values
 qdrant_url = os.getenv("QDRANT_URL")
 qdrant_api_key = os.getenv("QDRANT_API_KEY")
-
+model_name = "BAAI/bge-m3"
 # Qdrant clients
 client = QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
 aclient = AsyncQdrantClient(url=qdrant_url, api_key=qdrant_api_key)
@@ -32,12 +32,13 @@ aclient = AsyncQdrantClient(url=qdrant_url, api_key=qdrant_api_key)
 vector_store = QdrantVectorStore(
     client=client,
     aclient=aclient,
-    collection_name="eurlex"
+    collection_name="legal_BAAI_bge-m3"
 )
 
 # Embeddings
 embed_model = HuggingFaceEmbedding(
-    model_name="sentence-transformers/all-MiniLM-L6-v2",
+    # model_name="sentence-transformers/all-MiniLM-L6-v2",
+    model_name=model_name,
     device="cpu",
 )
 
@@ -86,32 +87,32 @@ agent = FunctionAgent(
 )
 
 # --- PostgreSQL connection ---
-conn = psycopg2.connect(os.getenv("DATABASE_URL"))
-cursor = conn.cursor()
+# conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+# cursor = conn.cursor()
 
-# Chainlit auth callback
-@cl.password_auth_callback
-def auth_callback(username, password):
-    # Fetch user from database
-    cursor.execute(
-    'SELECT "identifier", "password", "metadata" FROM "User" WHERE "identifier" = %s',
-    (username,)
-    )
-    row = cursor.fetchone()
+# # Chainlit auth callback
+# @cl.password_auth_callback
+# def auth_callback(username, password):
+#     # Fetch user from database
+#     cursor.execute(
+#     'SELECT "identifier", "password", "metadata" FROM "User" WHERE "identifier" = %s',
+#     (username,)
+#     )
+#     row = cursor.fetchone()
 
-    if not row:
-        return None
+#     if not row:
+#         return None
 
-    identifier, password_hash, metadata = row
+#     identifier, password_hash, metadata = row
 
-    # Check bcrypt password
-    if bcrypt.checkpw(password.encode(), password_hash.encode()):
-        return cl.User(
-            identifier=identifier,
-            metadata=metadata if metadata else {}
-        )
+#     # Check bcrypt password
+#     if bcrypt.checkpw(password.encode(), password_hash.encode()):
+#         return cl.User(
+#             identifier=identifier,
+#             metadata=metadata if metadata else {}
+#         )
 
-    return None
+#     return None
 
 
 
