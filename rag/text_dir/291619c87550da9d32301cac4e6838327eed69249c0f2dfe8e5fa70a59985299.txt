@@ -1,0 +1,1 @@
+Votre connexion a été interrompue Un changement de réseau a été détecté. ERR_NETWORK_CHANGED Un changement de réseau a été détecté. Un changement de réseau a été détecté.
