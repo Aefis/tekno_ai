@@ -86,13 +86,16 @@ reaction_on_message_received = false
 
 [UI]
 # Name of the assistant.
-name = "Assistant"
+name = "Trak-AI Legal"
 
-# default_theme = "dark"
+# Dark theme par défaut
+default_theme = "dark"
 
-# layout = "wide"
+# Layout large
+layout = "wide"
 
-# default_sidebar_state = "open"
+# Sidebar ouverte par défaut pour voir l'historique
+default_sidebar_state = "open"
 
 # Description of the assistant. This is used for HTML tags.
 # description = ""
