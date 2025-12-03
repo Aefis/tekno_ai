@@ -121,6 +121,51 @@ def format_chat_history(history: list, max_messages: int = 10) -> str:
     
     return "\n".join(formatted)
 
+
+def format_sources(source_nodes, max_sources: int = 5) -> str:
+    """Formate les sources récupérées de la base vectorielle."""
+    if not source_nodes:
+        return ""
+    
+    sources = []
+    sources.append("\n\n---\n📚 **Sources utilisées** (Base vectorielle Qdrant):\n")
+    
+    for i, node in enumerate(source_nodes[:max_sources]):
+        # Extraire les métadonnées
+        metadata = node.node.metadata if hasattr(node.node, 'metadata') else {}
+        
+        # Récupérer les infos du document
+        title = metadata.get('title', metadata.get('titre', 'Document sans titre'))
+        doc_type = metadata.get('type', metadata.get('type_acte', ''))
+        date = metadata.get('date', '')
+        chapter = metadata.get('chapter', metadata.get('chapitre', ''))
+        
+        # Score de similarité
+        score = f"{node.score:.2%}" if hasattr(node, 'score') and node.score else "N/A"
+        
+        # Extrait du texte (tronqué)
+        text = node.node.text if hasattr(node.node, 'text') else str(node.node)
+        text_preview = text[:200] + "..." if len(text) > 200 else text
+        
+        # Formater la source
+        source_info = f"\n**📄 Source {i+1}** (Score: {score})\n"
+        if title:
+            source_info += f"- **Titre**: {title}\n"
+        if doc_type:
+            source_info += f"- **Type**: {doc_type}\n"
+        if date:
+            source_info += f"- **Date**: {date}\n"
+        if chapter:
+            source_info += f"- **Chapitre**: {chapter}\n"
+        source_info += f"- **Extrait**: _{text_preview}_\n"
+        
+        sources.append(source_info)
+    
+    if len(source_nodes) > max_sources:
+        sources.append(f"\n_... et {len(source_nodes) - max_sources} autres sources_")
+    
+    return "".join(sources)
+
 # ============================================================
 # CHAINLIT CALLBACKS
 # ============================================================
@@ -131,6 +176,7 @@ async def start():
     cl.user_session.set("chat_history", [])
     cl.user_session.set("history_enabled", True)
     cl.user_session.set("max_history_messages", 10)
+    cl.user_session.set("show_sources", True)  # Afficher les sources par défaut
     
     # Configurer les settings (accessibles via l'icône ⚙️)
     settings = await cl.ChatSettings(
@@ -147,6 +193,11 @@ async def start():
                 min=2,
                 max=30,
                 step=2
+            ),
+            Switch(
+                id="show_sources",
+                label="📚 Afficher les sources (documents récupérés)",
+                initial=True
             )
         ]
     ).send()
@@ -177,9 +228,11 @@ async def settings_update(settings):
     """Callback quand les settings sont modifiés."""
     cl.user_session.set("history_enabled", settings["history_enabled"])
     cl.user_session.set("max_history_messages", int(settings["max_history_messages"]))
+    cl.user_session.set("show_sources", settings["show_sources"])
     
-    status = "activé" if settings["history_enabled"] else "désactivé"
-    await cl.Message(f"⚙️ Historique {status} (max: {int(settings['max_history_messages'])} messages)").send()
+    history_status = "activé" if settings["history_enabled"] else "désactivé"
+    sources_status = "activé" if settings["show_sources"] else "désactivé"
+    await cl.Message(f"⚙️ Paramètres mis à jour:\n- Historique: {history_status}\n- Affichage sources: {sources_status}").send()
 
 
 @cl.on_message
@@ -217,16 +270,29 @@ async def main(message: cl.Message):
             )
             response = await query_engine_no_history.aquery(message.content)
         
-        content = response.response
+        # Réponse du LLM
+        llm_response = response.response
         
-        # Sauvegarder dans l'historique si activé
+        # Vérifier si on doit afficher les sources
+        show_sources = cl.user_session.get("show_sources", True)
+        
+        # Sources de la base vectorielle (si activé)
+        if show_sources:
+            source_nodes = response.source_nodes if hasattr(response, 'source_nodes') else []
+            sources_text = format_sources(source_nodes)
+            content = f"🤖 **Réponse générée par le LLM:**\n\n{llm_response}{sources_text}"
+        else:
+            content = llm_response
+        
+        # Sauvegarder dans l'historique (sans les sources pour ne pas alourdir)
         if history_enabled:
             chat_history.append({"role": "user", "content": message.content})
-            chat_history.append({"role": "assistant", "content": content})
+            chat_history.append({"role": "assistant", "content": llm_response})
             cl.user_session.set("chat_history", chat_history)
 
     except Exception as e:
         content = f"❌ Erreur: {str(e)}"
+        source_nodes = []
 
     # Supprimer le message de chargement
     await loading.remove()
