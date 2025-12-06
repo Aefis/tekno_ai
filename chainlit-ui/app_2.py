@@ -1,4 +1,7 @@
 import os
+
+import bcrypt
+import psycopg2
 import chainlit as cl
 from chainlit.input_widget import Switch, Slider
 from chainlit.types import ThreadDict
@@ -58,6 +61,19 @@ index = VectorStoreIndex.from_vector_store(
 
 qa_tmpl_with_history = PromptTemplate("""
 Vous êtes un assistant juridique intelligent. Vous êtes en conversation continue avec l'utilisateur.
+                                      
+RÈGLE ABSOLUE :
+- Si la question n’est PAS juridique → indique-le explicitement.
+- N’invente jamais de réponse.
+- N’utilise jamais les documents pour répondre à une question non juridique.
+- Si le contexte documentaire n’est pas pertinent → dis-le clairement.
+
+                                      
+LANGUE (OBLIGATOIRE) :
+- Répondez strictement dans la langue du dernier message utilisateur.
+- Si la question est en français → répondez en français.
+- Si la question est en anglais → répondez en anglais.
+- Ne mélangez jamais les langues.
 
 IMPORTANT: Tenez compte de l'HISTORIQUE DE CONVERSATION ci-dessous pour comprendre le contexte.
 Si l'utilisateur fait référence à "ça", "cela", "ce sujet", etc., référez-vous à l'historique.
@@ -73,9 +89,7 @@ Chaque extrait de document inclut :
 {metadata_str}
 
 === QUESTION ACTUELLE (avec historique) ===
-{query_str}
-
-Répondez de manière détaillée et cohérente avec la conversation en cours, dans la même langue que l'utilisateur:
+{query_str}                                      
 """)
 
 qa_tmpl_no_history = PromptTemplate("""
@@ -327,3 +341,32 @@ async def on_thumbs_up(action: cl.Action):
 async def on_thumbs_down(action: cl.Action):
     """Feedback négatif."""
     await cl.Message(content="📝 Merci pour votre feedback. Nous allons nous améliorer !").send()
+
+
+# --- PostgreSQL connection ---
+conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+cursor = conn.cursor()
+
+# Chainlit auth callback
+@cl.password_auth_callback
+def auth_callback(username, password):
+    # Fetch user from database
+    cursor.execute(
+    'SELECT "identifier", "password", "metadata" FROM "User" WHERE "identifier" = %s',
+    (username,)
+    )
+    row = cursor.fetchone()
+
+    if not row:
+        return None
+
+    identifier, password_hash, metadata = row
+
+    # Check bcrypt password
+    if bcrypt.checkpw(password.encode(), password_hash.encode()):
+        return cl.User(
+            identifier=identifier,
+            metadata=metadata if metadata else {}
+        )
+
+    return None
