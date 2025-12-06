@@ -5,6 +5,8 @@ Recommandé : FunctionAgent (stable tool-calling)
 """
 
 import os
+import bcrypt
+import psycopg2
 import chainlit as cl
 from dotenv import load_dotenv
 
@@ -126,3 +128,33 @@ async def main(message: cl.Message):
 
     loading.content = content
     await loading.update()
+
+
+
+# --- PostgreSQL connection ---
+conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+cursor = conn.cursor()
+
+# Chainlit auth callback
+@cl.password_auth_callback
+def auth_callback(username, password):
+    # Fetch user from database
+    cursor.execute(
+    'SELECT "identifier", "password", "metadata" FROM "User" WHERE "identifier" = %s',
+    (username,)
+    )
+    row = cursor.fetchone()
+
+    if not row:
+        return None
+
+    identifier, password_hash, metadata = row
+
+    # Check bcrypt password
+    if bcrypt.checkpw(password.encode(), password_hash.encode()):
+        return cl.User(
+            identifier=identifier,
+            metadata=metadata if metadata else {}
+        )
+
+    return None
