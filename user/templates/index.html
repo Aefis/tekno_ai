@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create User</title>
+    <style>
+        body {
+            background: #f2f4f7;
+            font-family: Arial, sans-serif;
+        }
+
+        .box {
+            width: 420px;
+            margin: 80px auto;
+            padding: 25px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 6px 0 15px 0;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        input[readonly] {
+            background: #f7f7f7;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background: #4a90e2;
+            color: white;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #357abd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Create User</h2>
+
+    <form method="POST">
+        <label>User Email</label>
+        <input type="email" name="email" required>
+
+        <label>User Password</label>
+        <input type="password" name="password" required>
+
+        <label>Token received</label>
+        <input type="text" placeholder="12 characters">
+
+        <button type="submit">Create User</button>
+    </form>
+</div>
+
+</body>
+</html>
